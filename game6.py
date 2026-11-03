@@ -14,6 +14,40 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 # 【担当者2：ボス・お邪魔ギミックのエリア】
 # =========================================================
 
+class BossManager:
+    def __init__(self):
+        self.active = False
+        self.rect = pg.Rect(0, 50, 100, 40)
+        self.beams = []
+        self.timer = 0
+
+    def update(self, player_rect):
+        penalty = 0
+        self.timer += 1
+        if self.timer > 300 and not self.active:
+            self.active = True
+            self.rect.x = -100
+            self.timer = 0
+        if self.active:
+            self.rect.x += 5
+            if random.randint(1, 40) == 1:
+                self.beams.append(pg.Rect(self.rect.centerx, self.rect.bottom, 10, 20))
+            if self.rect.x > 800:
+                self.active = False
+        for b in self.beams[:]:
+            b.y += 8
+            if b.colliderect(player_rect):
+                penalty = -20
+                self.beams.remove(b)
+            elif b.y > 600:
+                self.beams.remove(b)
+        return penalty
+    
+    def draw(self, screen):
+        if self.active:
+            pg.draw.rect(screen, (150, 0, 150), self.rect)
+        for b in self.beams:
+            pg.draw.rect(screen, (255, 255, 0), b)
 
 # =========================================================
 # 【担当者3：特殊アイテム（金のリンゴ等）のエリア】
@@ -85,6 +119,8 @@ def main():
     # =========================================================
     # 各担当者はここに自分のクラスをインスタンス化するコードを書く
     
+    boss_manager = BossManager()
+
     while True:
         # --- イベント処理 ---
         for event in pg.event.get():
@@ -107,6 +143,8 @@ def main():
             # 【各機能の更新（update）呼び出しエリア】
             # =========================================================
             # 各担当者はここに自身のupdate処理を書く
+
+            score += boss_manager.update(player.rect)
 
             # 共通：アイテムのランダム生成
             if random.randint(1, 30) == 1:
@@ -131,6 +169,8 @@ def main():
         # 【各機能の描画（draw）呼び出しエリア】
         # =========================================================
         # 各担当者はここに自身のdraw処理を書く
+
+        boss_manager.draw(screen)
 
         # 共通：UI描画
         score_text = font.render(f"Score: {score}", True, (0, 0, 0))
