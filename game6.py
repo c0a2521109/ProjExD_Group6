@@ -56,6 +56,32 @@ class BossManager:
 
 # =========================================================
 # 【担当者4：コンボシステムのエリア】
+class ComboSystem:
+    def __init__(self):
+        self.combo = 0
+        self.last_time = 0
+        self.font = pg.font.SysFont(None, 50)
+        self.effects = []
+    def update(self):
+        if self.combo > 0 and (pg.time.get_ticks() - self.last_time) > 2000:
+            self.combo = 0
+        for e in self.effects[:]:
+            e['y'] -= 2
+            e['life'] -= 1
+            if e['life'] <= 0:
+                self.effects.remove(e)
+    def add_combo(self):
+        self.combo += 1
+        self.last_time = pg.time.get_ticks()
+        bonus = 0
+        if self.combo > 1:
+            bonus = self.combo * 2
+            self.effects.append({'text': f"{self.combo} COMBO! +{bonus}", 'y': 300, 'life': 30})
+        return bonus
+    def draw(self, screen):
+        for e in self.effects:
+            text = self.font.render(e['text'], True, (255, 100, 50))
+            screen.blit(text, (400 - text.get_width()//2, e['y']))
 # =========================================================
 
 
@@ -118,6 +144,7 @@ def main():
     # 【各機能の初期化（インスタンス生成）エリア】
     # =========================================================
     # 各担当者はここに自分のクラスをインスタンス化するコードを書く
+    combo_system = ComboSystem()
     
     boss_manager = BossManager()
 
@@ -143,6 +170,8 @@ def main():
             # 【各機能の更新（update）呼び出しエリア】
             # =========================================================
             # 各担当者はここに自身のupdate処理を書く
+            combo_system.update()
+
 
             score += boss_manager.update(player.rect)
 
@@ -160,6 +189,7 @@ def main():
                 # 【キャッチ時の追加イベント呼び出しエリア】
                 # =========================================================
                 # 担当者4（コンボ）などはここに処理を書く
+                score += combo_system.add_combo()
         
         # --- 描画処理 (Draw) ---
         screen.fill((240, 255, 240))
@@ -169,6 +199,7 @@ def main():
         # 【各機能の描画（draw）呼び出しエリア】
         # =========================================================
         # 各担当者はここに自身のdraw処理を書く
+        combo_system.draw(screen)
 
         boss_manager.draw(screen)
 
